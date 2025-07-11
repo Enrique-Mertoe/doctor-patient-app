@@ -1,7 +1,7 @@
 "use client"
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
-import AppointmentBooking from './AppointmentBooking'
+import SmartAppointmentBooking from './SmartAppointmentBooking'
 import AppointmentPreview from './AppointmentPreview'
 
 export default function PatientDashboard({ user, profile }) {
@@ -97,9 +97,12 @@ export default function PatientDashboard({ user, profile }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-            Book New Appointment
+            🤖 Smart Appointment Booking
           </h2>
-          <AppointmentBooking user={user} profile={profile} />
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Describe your condition and we'll find the best doctor for you
+          </p>
+          <SmartAppointmentBooking user={user} profile={profile} />
         </div>
         
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">

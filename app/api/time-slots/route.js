@@ -61,11 +61,72 @@ export async function GET(request) {
       existingSlots = newSlots
     }
 
-    // Format slots for frontend
-    const formattedSlots = existingSlots.map(slot => {
+    // Get current user to check for existing appointments
+    const { data: { user } } = await supabase.auth.getUser()
+    let patientId = null
+    
+    if (user) {
+      const { data: patient } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+      
+      if (patient) {
+        patientId = patient.id
+      }
+    }
+
+    // Format slots for frontend with enhanced availability checking
+    const formattedSlots = await Promise.all(existingSlots.map(async (slot) => {
       const startTime = new Date(`2000-01-01T${slot.start_time}`)
       const endTime = new Date(`2000-01-01T${slot.end_time}`)
       
+      let isAvailableForUser = slot.is_available && slot.current_bookings < slot.max_capacity
+      let unavailableReason = null
+
+      // Check if current user already has an appointment at this time
+      if (patientId && isAvailableForUser) {
+        const { data: existingAppt } = await supabase
+          .from('appointments')
+          .select('id')
+          .eq('patient_id', patientId)
+          .eq('time_slot_id', slot.id)
+          .neq('status', 'cancelled')
+          .single()
+
+        if (existingAppt) {
+          isAvailableForUser = false
+          unavailableReason = 'You already have an appointment at this time'
+        } else {
+          // Check for overlapping appointments on the same day
+          const { data: overlappingAppts } = await supabase
+            .from('appointments')
+            .select(`
+              id,
+              time_slots!inner(start_time, end_time)
+            `)
+            .eq('patient_id', patientId)
+            .eq('time_slots.date', date)
+            .neq('status', 'cancelled')
+
+          if (overlappingAppts && overlappingAppts.length > 0) {
+            for (const appt of overlappingAppts) {
+              const apptStart = new Date(`${date}T${appt.time_slots.start_time}`)
+              const apptEnd = new Date(`${date}T${appt.time_slots.end_time}`)
+              const slotStart = new Date(`${date}T${slot.start_time}`)
+              const slotEnd = new Date(`${date}T${slot.end_time}`)
+
+              if (slotStart < apptEnd && slotEnd > apptStart) {
+                isAvailableForUser = false
+                unavailableReason = 'You have a conflicting appointment'
+                break
+              }
+            }
+          }
+        }
+      }
+
       return {
         id: slot.id,
         start_time: slot.start_time,
@@ -73,9 +134,10 @@ export async function GET(request) {
         display: `${startTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} - ${endTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`,
         current_bookings: slot.current_bookings,
         max_capacity: slot.max_capacity,
-        is_available: slot.is_available && slot.current_bookings < slot.max_capacity
+        is_available: isAvailableForUser,
+        unavailable_reason: unavailableReason
       }
-    })
+    }))
 
     return NextResponse.json({ slots: formattedSlots })
   } catch (error) {

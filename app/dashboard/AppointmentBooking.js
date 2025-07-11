@@ -178,11 +178,15 @@ export default function AppointmentBooking({ user, profile }) {
                       ? 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 border-gray-200 dark:border-gray-600 cursor-not-allowed'
                   }`}
+                  title={slot.unavailable_reason || ''}
                 >
                   {slot.display}
                   <br />
                   <span className="text-xs">
-                    {slot.current_bookings}/{slot.max_capacity} booked
+                    {slot.is_available 
+                      ? `${slot.current_bookings}/${slot.max_capacity} booked`
+                      : slot.unavailable_reason || `Full (${slot.current_bookings}/${slot.max_capacity})`
+                    }
                   </span>
                 </button>
               ))}

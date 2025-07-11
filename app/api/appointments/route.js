@@ -32,6 +32,73 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Time slot is full' }, { status: 409 })
     }
 
+    // Check if patient already has an appointment at this exact time slot
+    const { data: existingAppointment } = await supabase
+      .from('appointments')
+      .select('id')
+      .eq('time_slot_id', timeSlotId)
+      .neq('status', 'cancelled')
+
+    if (existingAppointment && existingAppointment.length > 0) {
+      // Check if the existing appointment is from the same patient
+      const { data: patient } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (patient) {
+        const { data: patientExistingAppt } = await supabase
+          .from('appointments')
+          .select('id')
+          .eq('time_slot_id', timeSlotId)
+          .eq('patient_id', patient.id)
+          .neq('status', 'cancelled')
+          .single()
+
+        if (patientExistingAppt) {
+          return NextResponse.json({ error: 'You already have an appointment at this time' }, { status: 409 })
+        }
+      }
+    }
+
+    // Additional check: Ensure patient doesn't have overlapping appointments
+    const { data: patientData } = await supabase
+      .from('patients')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (patientData) {
+      const { data: overlappingAppointments } = await supabase
+        .from('appointments')
+        .select(`
+          id,
+          time_slots!inner(date, start_time, end_time)
+        `)
+        .eq('patient_id', patientData.id)
+        .eq('time_slots.date', slot.date)
+        .neq('status', 'cancelled')
+
+      if (overlappingAppointments && overlappingAppointments.length > 0) {
+        // Check for time conflicts
+        const slotStart = new Date(`${slot.date}T${slot.start_time}`)
+        const slotEnd = new Date(`${slot.date}T${slot.end_time}`)
+
+        for (const existingAppt of overlappingAppointments) {
+          const existingStart = new Date(`${existingAppt.time_slots.date}T${existingAppt.time_slots.start_time}`)
+          const existingEnd = new Date(`${existingAppt.time_slots.date}T${existingAppt.time_slots.end_time}`)
+
+          // Check if times overlap
+          if ((slotStart < existingEnd && slotEnd > existingStart)) {
+            return NextResponse.json({ 
+              error: 'You already have an appointment during this time period' 
+            }, { status: 409 })
+          }
+        }
+      }
+    }
+
     // Create or update patient - filter out null/empty date_of_birth
     const cleanPatientData = {
       user_id: user.id,

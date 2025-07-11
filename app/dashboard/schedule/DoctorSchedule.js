@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns'
+import AppointmentActions from '../../../components/AppointmentActions'
 
 export default function DoctorSchedule({ user, profile }) {
   const [currentWeek, setCurrentWeek] = useState(new Date())
@@ -27,6 +28,7 @@ export default function DoctorSchedule({ user, profile }) {
         const weekEnd = endOfWeek(currentWeek)
         
         const weekAppointments = data.appointments.filter(apt => {
+          if (!apt.time_slots?.date) return false
           const aptDate = new Date(apt.time_slots.date)
           return aptDate >= weekStart && aptDate <= weekEnd
         })
@@ -37,6 +39,14 @@ export default function DoctorSchedule({ user, profile }) {
       console.error('Error fetching weekly data:', error)
     }
     setLoading(false)
+  }
+
+  const handleAppointmentUpdate = (updatedAppointment) => {
+    setAppointments(prev => 
+      prev.map(apt => 
+        apt.id === updatedAppointment.id ? updatedAppointment : apt
+      )
+    )
   }
 
   const fetchDaySlots = async (date) => {
@@ -176,24 +186,30 @@ export default function DoctorSchedule({ user, profile }) {
                         {apt.patients?.full_name}
                       </h4>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {format(new Date(`2000-01-01T${apt.time_slots.start_time}`), 'h:mm a')} - 
-                        {format(new Date(`2000-01-01T${apt.time_slots.end_time}`), 'h:mm a')}
+                        {apt.time_slots?.start_time && apt.time_slots?.end_time ? (
+                          <>
+                            {format(new Date(`2000-01-01T${apt.time_slots.start_time}`), 'h:mm a')} - 
+                            {format(new Date(`2000-01-01T${apt.time_slots.end_time}`), 'h:mm a')}
+                          </>
+                        ) : 'Time unavailable'}
                       </p>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(apt.status)}`}>
-                      {apt.status.replace('_', ' ').toUpperCase()}
-                    </span>
                   </div>
                   
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                     <strong>Condition:</strong> {apt.medical_condition}
                   </div>
                   
                   {apt.notes && (
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                       <strong>Notes:</strong> {apt.notes}
                     </div>
                   )}
+                  
+                  <AppointmentActions 
+                    appointment={apt} 
+                    onUpdate={handleAppointmentUpdate}
+                  />
                 </div>
               ))
             ) : (

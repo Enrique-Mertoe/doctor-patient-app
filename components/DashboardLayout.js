@@ -3,6 +3,7 @@
 import Sidebar from './Sidebar'
 import DashboardHeader from '../app/dashboard/DashboardHeader'
 import ChatWidget from './ChatWidget'
+import NotificationCenter from './NotificationCenter'
 
 export default function DashboardLayout({ user, profile, children }) {
   return (
@@ -20,6 +21,7 @@ export default function DashboardLayout({ user, profile, children }) {
         </main>
       </div>
       
+      <NotificationCenter user={user} profile={profile} />
       <ChatWidget user={user} profile={profile} />
     </div>
   )
