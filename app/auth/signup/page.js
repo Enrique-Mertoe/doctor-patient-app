@@ -39,10 +39,10 @@ export default function SignupPage() {
     if (error) {
       setMessage(error.message)
     } else {
-      setMessage('Check your email for the confirmation link!')
+      setMessage('Account created! Please check your email to confirm your account, then sign in to complete your profile setup.')
       setTimeout(() => {
         router.push('/auth/login')
-      }, 2000)
+      }, 3000)
     }
     setLoading(false)
   }

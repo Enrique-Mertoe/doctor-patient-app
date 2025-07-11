@@ -1,10 +1,9 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import DashboardHeader from './DashboardHeader'
-import PatientDashboard from './PatientDashboard'
-import DoctorDashboard from './DoctorDashboard'
+import DashboardHeader from '../DashboardHeader'
+import PrescriptionsView from './PrescriptionsView'
 
-export default async function DashboardPage() {
+export default async function PrescriptionsPage() {
   const supabase = await createClient()
   
   const { data: { user }, error } = await supabase.auth.getUser()
@@ -30,17 +29,19 @@ export default async function DashboardPage() {
       
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          {profile.role === 'patient' ? (
-            <PatientDashboard user={user} profile={profile} />
-          ) : profile.role === 'doctor' ? (
-            <DoctorDashboard user={user} profile={profile} />
-          ) : (
-            <div className="text-center py-12">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Unknown user role. Please contact support.
-              </h2>
-            </div>
-          )}
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Prescriptions & Refills
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
+              {profile.role === 'patient' 
+                ? 'View your prescriptions and request refills'
+                : 'Manage patient prescriptions and refill requests'
+              }
+            </p>
+          </div>
+          
+          <PrescriptionsView user={user} profile={profile} />
         </div>
       </div>
     </div>

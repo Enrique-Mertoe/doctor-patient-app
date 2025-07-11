@@ -78,18 +78,64 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: appointments, error } = await supabase
-      .from('appointments')
-      .select(`
-        *,
-        time_slots (date, start_time, end_time),
-        doctors (name, specialization),
-        patients!inner (user_id)
-      `)
-      .eq('patients.user_id', user.id)
-      .order('created_at', { ascending: false })
+    // Get user profile to determine role
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single()
 
-    if (error) throw error
+    if (!profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
+    }
+
+    let appointments = []
+
+    if (profile.role === 'patient') {
+      // Get patient's appointments
+      const { data: patient } = await supabase
+        .from('patients')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (patient) {
+        const { data, error } = await supabase
+          .from('appointments')
+          .select(`
+            *,
+            time_slots (date, start_time, end_time),
+            doctors (name, specialization)
+          `)
+          .eq('patient_id', patient.id)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+        appointments = data || []
+      }
+    } else if (profile.role === 'doctor') {
+      // Get doctor's appointments
+      const { data: doctor } = await supabase
+        .from('doctors')
+        .select('id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (doctor) {
+        const { data, error } = await supabase
+          .from('appointments')
+          .select(`
+            *,
+            time_slots (date, start_time, end_time),
+            patients (full_name, email, phone, date_of_birth)
+          `)
+          .eq('doctor_id', doctor.id)
+          .order('time_slots(date)', { ascending: true })
+
+        if (error) throw error
+        appointments = data || []
+      }
+    }
 
     return NextResponse.json({ appointments })
   } catch (error) {

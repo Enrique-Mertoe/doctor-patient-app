@@ -19,7 +19,7 @@ export default function LoginPage() {
     setLoading(true)
     setMessage('')
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
@@ -27,7 +27,20 @@ export default function LoginPage() {
     if (error) {
       setMessage(error.message)
     } else {
-      router.push('/dashboard')
+      // Check if user needs onboarding via API
+      try {
+        const profileResponse = await fetch('/api/profile')
+        const profileData = await profileResponse.json()
+        
+        if (profileData.needsOnboarding) {
+          router.push('/onboarding')
+        } else {
+          router.push('/dashboard')
+        }
+      } catch (profileError) {
+        // If API fails, default to dashboard
+        router.push('/dashboard')
+      }
     }
     setLoading(false)
   }

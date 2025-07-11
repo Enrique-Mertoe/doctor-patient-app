@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 
-export default function AppointmentHistory() {
+export default function AppointmentHistory({ user, profile }) {
   const [appointments, setAppointments] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -50,12 +50,25 @@ export default function AppointmentHistory() {
         <div key={appointment.id} className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-start mb-2">
             <div>
-              <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
-                Dr. {appointment.doctors.name}
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {appointment.doctors.specialization}
-              </p>
+              {profile?.role === 'patient' ? (
+                <>
+                  <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+                    Dr. {appointment.doctors?.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {appointment.doctors?.specialization}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3 className="font-semibold text-lg text-gray-900 dark:text-white">
+                    {appointment.patients?.full_name}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {appointment.patients?.email}
+                  </p>
+                </>
+              )}
             </div>
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
               {appointment.status.replace('_', ' ').toUpperCase()}
