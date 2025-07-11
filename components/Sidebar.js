@@ -111,7 +111,7 @@ export default function Sidebar({ user, profile }) {
       </div>
 
       {/* Navigation Items */}
-      <nav className="flex-1 p-3 space-y-2">
+      <nav className="flex-1 p-1 space-y-2">
         {navItems.map((item) => {
           const IconComponent = item.icon
           return (
