@@ -3,6 +3,18 @@
 import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import { 
+  Home, 
+  Calendar, 
+  FileText, 
+  Pill, 
+  User, 
+  Users, 
+  CalendarDays,
+  Heart,
+  Menu,
+  X
+} from 'lucide-react'
 
 export default function Sidebar({ user, profile }) {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
@@ -12,31 +24,31 @@ export default function Sidebar({ user, profile }) {
     {
       name: 'Dashboard',
       href: '/dashboard',
-      icon: '🏠',
+      icon: Home,
       description: 'Overview'
     },
     {
       name: 'Appointments',
       href: '/dashboard/appointments',
-      icon: '📅',
+      icon: Calendar,
       description: 'Schedule'
     },
     {
       name: 'Medical Records',
       href: '/dashboard/medical-records',
-      icon: '📋',
+      icon: FileText,
       description: 'Records'
     },
     {
       name: 'Prescriptions',
       href: '/dashboard/prescriptions',
-      icon: '💊',
+      icon: Pill,
       description: 'Medicines'
     },
     {
       name: 'Profile',
       href: '/dashboard/profile',
-      icon: '👤',
+      icon: User,
       description: 'Account'
     }
   ]
@@ -45,31 +57,31 @@ export default function Sidebar({ user, profile }) {
     {
       name: 'Dashboard',
       href: '/dashboard',
-      icon: '🏠',
+      icon: Home,
       description: 'Overview'
     },
     {
       name: 'Schedule',
       href: '/dashboard/schedule',
-      icon: '📅',
+      icon: CalendarDays,
       description: 'Calendar'
     },
     {
       name: 'Patients',
       href: '/dashboard/medical-records',
-      icon: '👥',
+      icon: Users,
       description: 'Records'
     },
     {
       name: 'Prescriptions',
       href: '/dashboard/prescriptions',
-      icon: '💊',
+      icon: Pill,
       description: 'Medicines'
     },
     {
       name: 'Profile',
       href: '/dashboard/profile',
-      icon: '👤',
+      icon: User,
       description: 'Account'
     }
   ]
@@ -89,7 +101,7 @@ export default function Sidebar({ user, profile }) {
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex flex-col items-center space-y-2">
           <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">M</span>
+            <Heart className="w-6 h-6 text-white" />
           </div>
           <div className="text-center">
             <p className="text-xs font-medium text-gray-900 dark:text-white">MedCare</p>
@@ -100,30 +112,33 @@ export default function Sidebar({ user, profile }) {
 
       {/* Navigation Items */}
       <nav className="flex-1 p-3 space-y-2">
-        {navItems.map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            className={`
-              flex flex-col items-center p-3 rounded-lg transition-all duration-200 group
-              ${isActive(item.href)
-                ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
-              }
-            `}
-            onClick={() => setIsMobileOpen(false)}
-          >
-            <div className={`
-              text-2xl mb-1 transition-transform duration-200 group-hover:scale-110
-              ${isActive(item.href) ? 'scale-110' : ''}
-            `}>
-              {item.icon}
-            </div>
-            <span className="text-xs font-medium text-center leading-tight">
-              {item.description}
-            </span>
-          </Link>
-        ))}
+        {navItems.map((item) => {
+          const IconComponent = item.icon
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`
+                flex flex-col items-center p-3 rounded-lg transition-all duration-200 group
+                ${isActive(item.href)
+                  ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white'
+                }
+              `}
+              onClick={() => setIsMobileOpen(false)}
+            >
+              <div className={`
+                mb-1 transition-transform duration-200 group-hover:scale-110
+                ${isActive(item.href) ? 'scale-110' : ''}
+              `}>
+                <IconComponent className="w-6 h-6" />
+              </div>
+              <span className="text-xs font-medium text-center leading-tight">
+                {item.description}
+              </span>
+            </Link>
+          )
+        })}
       </nav>
 
       {/* User Info */}
@@ -151,11 +166,11 @@ export default function Sidebar({ user, profile }) {
         onClick={() => setIsMobileOpen(!isMobileOpen)}
         className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700"
       >
-        <div className="w-6 h-6 flex flex-col justify-center items-center">
-          <span className={`bg-gray-600 dark:bg-gray-300 block transition-all duration-300 ease-out h-0.5 w-6 rounded-sm ${isMobileOpen ? 'rotate-45 translate-y-1' : '-translate-y-0.5'}`}></span>
-          <span className={`bg-gray-600 dark:bg-gray-300 block transition-all duration-300 ease-out h-0.5 w-6 rounded-sm my-0.5 ${isMobileOpen ? 'opacity-0' : 'opacity-100'}`}></span>
-          <span className={`bg-gray-600 dark:bg-gray-300 block transition-all duration-300 ease-out h-0.5 w-6 rounded-sm ${isMobileOpen ? '-rotate-45 -translate-y-1' : 'translate-y-0.5'}`}></span>
-        </div>
+        {isMobileOpen ? (
+          <X className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+        ) : (
+          <Menu className="w-6 h-6 text-gray-600 dark:text-gray-300" />
+        )}
       </button>
 
       {/* Mobile Overlay */}
