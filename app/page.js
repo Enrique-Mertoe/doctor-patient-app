@@ -10,7 +10,7 @@ export default function Home() {
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
             Book your medical appointments online with ease. 
-            Available slots from 8:00 AM to 5:00 PM, every 1 hour 30 minutes.
+            Available slots from 8:00 AM to 5:00 PM.
           </p>
           
           <div className="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
