@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import AppointmentBooking from './AppointmentBooking'
-import AppointmentHistory from './AppointmentHistory'
+import AppointmentPreview from './AppointmentPreview'
 
 export default function PatientDashboard({ user, profile }) {
   const [stats, setStats] = useState({
@@ -52,7 +52,7 @@ export default function PatientDashboard({ user, profile }) {
                 Next Appointment
               </div>
               <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                {loading ? 'Loading...' : stats.nextAppointment 
+                {loading ? 'Loading...' : (stats.nextAppointment && stats.nextAppointment.time_slots?.date)
                   ? format(new Date(stats.nextAppointment.time_slots.date), 'MMM d')
                   : 'None scheduled'
                 }
@@ -106,7 +106,7 @@ export default function PatientDashboard({ user, profile }) {
           <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
             Your Appointments
           </h2>
-          <AppointmentHistory user={user} profile={profile} />
+          <AppointmentPreview user={user} profile={profile} />
         </div>
       </div>
 
@@ -125,7 +125,10 @@ export default function PatientDashboard({ user, profile }) {
                     <h3 className="font-medium text-gray-900 dark:text-white">Recent Visits</h3>
                     {stats.recentAppointments.slice(0, 2).map((appointment) => (
                       <p key={appointment.id} className="text-sm text-gray-600 dark:text-gray-400">
-                        {format(new Date(appointment.time_slots.date), 'MMM d, yyyy')}: {appointment.medical_condition.substring(0, 40)}...
+                        {appointment.time_slots?.date 
+                          ? format(new Date(appointment.time_slots.date), 'MMM d, yyyy')
+                          : 'Date unavailable'
+                        }: {appointment.medical_condition?.substring(0, 40) || 'No condition specified'}...
                       </p>
                     ))}
                   </div>
@@ -138,7 +141,7 @@ export default function PatientDashboard({ user, profile }) {
                   </div>
                 )}
                 
-                {stats.nextAppointment ? (
+                {stats.nextAppointment && stats.nextAppointment.time_slots ? (
                   <div>
                     <h3 className="font-medium text-gray-900 dark:text-white">Upcoming</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">

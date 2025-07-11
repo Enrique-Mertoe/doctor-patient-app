@@ -42,7 +42,7 @@ export async function GET(request) {
                 // Upcoming appointments
                 const {data: upcomingAppointments} = await supabase
                     .from('appointments')
-                    .select('*, time_slots(date, start_time)')
+                    .select('*, time_slots!inner(date, start_time)')
                     .eq('patient_id', patient.id)
                     .eq('status', 'scheduled')
                     .gte('time_slots.date', new Date().toISOString().split('T')[0])
@@ -54,7 +54,7 @@ export async function GET(request) {
                     .from('appointments')
                     .select(`
                         *,
-                        time_slots(date, start_time),
+                        time_slots!inner(date, start_time),
                         doctors(name, specialization)
                     `)
                     .eq('patient_id', patient.id)
@@ -138,7 +138,7 @@ export async function GET(request) {
                 // Today's schedule
                 const {data: todaySchedule} = await supabase
                     .from('appointments')
-                    .select('*, time_slots(start_time, end_time), patients(full_name)')
+                    .select('*, time_slots!inner(start_time, end_time), patients(full_name)')
                     .eq('doctor_id', doctor.id)
                     .eq('time_slots.date', today)
                     .eq('status', 'scheduled')
@@ -147,7 +147,7 @@ export async function GET(request) {
                 // Recent patients
                 const {data: recentPatients} = await supabase
                     .from('appointments')
-                    .select('*, patients(full_name, email), time_slots(date)')
+                    .select('*, patients(full_name, email), time_slots!inner(date)')
                     .eq('doctor_id', doctor.id)
                     .neq('status', 'cancelled')
                     .order('created_at', {ascending: false})

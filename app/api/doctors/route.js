@@ -22,13 +22,12 @@ export async function GET(request) {
             return NextResponse.json({ error: 'Only patients can view doctor list' }, { status: 403 })
         }
 
-        // Fetch all doctors with their user details
+        // Fetch all active doctors
         const { data: doctors, error } = await supabase
             .from('doctors')
-            .select(`
-                *,
-                user_profiles!inner(user_id, full_name)
-            `)
+            .select('*')
+            .eq('is_active', true)
+            .order('name')
 
         if (error) {
             console.error('Error fetching doctors:', error)

@@ -153,7 +153,10 @@ export default function DoctorDashboard({ user, profile }) {
                   <div>
                     <div className="font-medium text-gray-900 dark:text-white">{appointment.patients?.full_name}</div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Last visit: {format(new Date(appointment.time_slots?.date), 'MMM d, yyyy')}
+                      Last visit: {appointment.time_slots?.date 
+                        ? format(new Date(appointment.time_slots.date), 'MMM d, yyyy')
+                        : 'Date unavailable'
+                      }
                     </div>
                   </div>
                   <button className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 text-sm">

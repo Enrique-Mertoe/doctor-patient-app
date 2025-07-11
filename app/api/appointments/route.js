@@ -32,13 +32,20 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Time slot is full' }, { status: 409 })
     }
 
-    // Create or update patient
+    // Create or update patient - filter out null/empty date_of_birth
+    const cleanPatientData = {
+      user_id: user.id,
+      ...patientData
+    }
+    
+    // Remove date_of_birth if it's null or empty to avoid DB constraint issues
+    if (!cleanPatientData.date_of_birth) {
+      delete cleanPatientData.date_of_birth
+    }
+
     const { data: patient, error: patientError } = await supabase
       .from('patients')
-      .upsert({
-        user_id: user.id,
-        ...patientData
-      }, { onConflict: 'user_id' })
+      .upsert(cleanPatientData, { onConflict: 'user_id' })
       .select()
       .single()
 
