@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 
-// POST - Complete onboarding
+// POST - Complete patient onboarding
 export async function POST(request) {
   try {
     const supabase = await createClient()
@@ -14,66 +14,98 @@ export async function POST(request) {
 
     const body = await request.json()
     const {
-      role,
+      role = 'patient', // Always patient now
       full_name,
       phone,
-      // Patient fields
       date_of_birth,
       emergency_contact_name,
       emergency_contact_phone,
       medical_history,
       allergies,
-      current_medications,
-      // Doctor fields
-      specialization
+      current_medications
     } = body
 
     // Validate required fields
-    if (!role || !full_name) {
-      return NextResponse.json({ error: 'Role and full name are required' }, { status: 400 })
+    if (!full_name) {
+      return NextResponse.json({ error: 'Full name is required' }, { status: 400 })
     }
 
-    if (!['doctor', 'patient'].includes(role)) {
-      return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
-    }
-
-    if (role === 'doctor' && !specialization) {
-      return NextResponse.json({ error: 'Specialization is required for doctors' }, { status: 400 })
-    }
-
-    // Start a transaction to ensure data consistency
-    const { data, error } = await supabase.rpc('onboard_user_transaction', {
-      p_user_id: user.id,
-      p_role: role,
-      p_full_name: full_name,
-      p_email: user.email,
-      p_phone: phone || null,
-      p_date_of_birth: date_of_birth || null,
-      p_emergency_contact_name: emergency_contact_name || null,
-      p_emergency_contact_phone: emergency_contact_phone || null,
-      p_medical_history: medical_history || null,
-      p_allergies: allergies || null,
-      p_current_medications: current_medications || null,
-      p_specialization: specialization || null
-    })
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    // Get the created profile for response
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('*')
+    // Check if user already has a profile
+    const { data: existingProfile } = await supabase
+      .from('patients')
+      .select('id')
       .eq('user_id', user.id)
       .single()
 
+    if (existingProfile) {
+      return NextResponse.json({ error: 'User already has a profile' }, { status: 400 })
+    }
+
+    // Create patient profile
+    const { data: patient, error: patientError } = await supabase
+      .from('patients')
+      .insert({
+        user_id: user.id,
+        name: full_name,
+        email: user.email,
+        phone: phone || null,
+        date_of_birth: date_of_birth || null,
+        emergency_contact_name: emergency_contact_name || null,
+        emergency_contact_phone: emergency_contact_phone || null,
+        medical_history: medical_history || null,
+        allergies: allergies || null,
+        current_medications: current_medications || null
+      })
+      .select()
+      .single()
+
+    if (patientError) {
+      throw patientError
+    }
+
+    // Assign user to patient group using the new user groups system
+    const { error: groupError } = await supabase
+      .rpc('assign_user_to_group', {
+        target_user_id: user.id,
+        group_name: 'patient',
+        assigning_user_id: user.id
+      })
+
+    if (groupError) {
+      console.error('Error assigning user to patient group:', groupError)
+      // Don't fail the onboarding if group assignment fails
+    }
+
+    // Send welcome email
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/emails`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+        },
+        body: JSON.stringify({
+          type: 'welcome',
+          to: user.email,
+          data: {
+            userName: full_name
+          }
+        })
+      })
+    } catch (emailError) {
+      console.error('Error sending welcome email:', emailError)
+      // Don't fail onboarding if email fails
+    }
+
     return NextResponse.json({ 
       success: true, 
-      profile,
-      message: 'Onboarding completed successfully'
+      patient,
+      message: 'Patient profile created successfully'
     })
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    console.error('Onboarding error:', error)
+    return NextResponse.json({ 
+      error: 'Failed to complete onboarding' 
+    }, { status: 500 })
   }
 }

@@ -207,16 +207,16 @@ CREATE OR REPLACE FUNCTION create_time_slots_for_doctor(
 )
 RETURNS INTEGER AS $$
 DECLARE
-    current_date DATE;
+    working_date DATE;
     slot_count INTEGER := 0;
     time_slots TIME[] := ARRAY['08:00', '09:30', '11:00', '12:30', '14:00', '15:30', '17:00'];
     slot_time TIME;
 BEGIN
-    current_date := start_date;
+    working_date := start_date;
     
-    WHILE current_date <= end_date LOOP
+    WHILE working_date <= end_date LOOP
         -- Skip weekends (optional - remove if doctors work weekends)
-        IF EXTRACT(DOW FROM current_date) NOT IN (0, 6) THEN
+        IF EXTRACT(DOW FROM working_date) NOT IN (0, 6) THEN
             FOREACH slot_time IN ARRAY time_slots LOOP
                 INSERT INTO time_slots (
                     doctor_id, 
@@ -228,7 +228,7 @@ BEGIN
                     is_available
                 ) VALUES (
                     doctor_uuid,
-                    current_date,
+                    working_date,
                     slot_time,
                     slot_time + INTERVAL '1.5 hours',
                     5,  -- Default capacity
@@ -241,7 +241,7 @@ BEGIN
             END LOOP;
         END IF;
         
-        current_date := current_date + INTERVAL '1 day';
+        working_date := working_date + INTERVAL '1 day';
     END LOOP;
     
     RETURN slot_count;
