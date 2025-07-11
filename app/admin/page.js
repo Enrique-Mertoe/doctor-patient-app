@@ -22,12 +22,15 @@ export default function AdminDashboard() {
   const [user, setUser] = useState(null)
   const [hasAdminAccess, setHasAdminAccess] = useState(false)
   const [stats, setStats] = useState({})
+  const [activities, setActivities] = useState([])
+  const [activitiesLoading, setActivitiesLoading] = useState(true)
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
     checkAdminAccess()
     fetchStats()
+    fetchActivities()
   }, [])
 
   const checkAdminAccess = async () => {
@@ -65,6 +68,43 @@ export default function AdminDashboard() {
       setStats(data)
     } catch (error) {
       console.error('Error fetching stats:', error)
+    }
+  }
+
+  const fetchActivities = async () => {
+    try {
+      setActivitiesLoading(true)
+      const response = await fetch('/api/admin/activities?limit=10')
+      const data = await response.json()
+      
+      if (response.ok) {
+        setActivities(data.activities || [])
+      } else {
+        console.error('Error fetching activities:', data.error)
+      }
+    } catch (error) {
+      console.error('Error fetching activities:', error)
+    } finally {
+      setActivitiesLoading(false)
+    }
+  }
+
+  const getActivityColor = (activityType) => {
+    switch (activityType) {
+      case 'user_registration':
+        return 'bg-green-500'
+      case 'appointment_booked':
+        return 'bg-blue-500'
+      case 'doctor_created':
+        return 'bg-purple-500'
+      case 'system_backup':
+        return 'bg-orange-500'
+      case 'system_maintenance':
+        return 'bg-yellow-500'
+      case 'system_update':
+        return 'bg-indigo-500'
+      default:
+        return 'bg-gray-500'
     }
   }
 
@@ -319,24 +359,38 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-center text-sm">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                  <span className="text-gray-600 dark:text-gray-400">New user registration - 2 minutes ago</span>
+              {activitiesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+                  <span className="ml-3 text-gray-600 dark:text-gray-400">Loading activities...</span>
                 </div>
-                <div className="flex items-center text-sm">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-3"></div>
-                  <span className="text-gray-600 dark:text-gray-400">Appointment booked - 15 minutes ago</span>
+              ) : activities.length === 0 ? (
+                <div className="text-center py-8">
+                  <Activity className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-600 dark:text-gray-400">No recent activities found</p>
                 </div>
-                <div className="flex items-center text-sm">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full mr-3"></div>
-                  <span className="text-gray-600 dark:text-gray-400">Doctor schedule updated - 1 hour ago</span>
+              ) : (
+                <div className="space-y-4">
+                  {activities.map((activity) => (
+                    <div key={activity.id} className="flex items-start text-sm">
+                      <div className={`w-2 h-2 rounded-full mr-3 mt-2 ${getActivityColor(activity.type)}`}></div>
+                      <div className="flex-1">
+                        <div className="text-gray-600 dark:text-gray-400">
+                          {activity.description}
+                          {activity.user_email && (
+                            <span className="text-gray-500 dark:text-gray-500 ml-1">
+                              by {activity.user_email}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                          {activity.time_ago}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex items-center text-sm">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full mr-3"></div>
-                  <span className="text-gray-600 dark:text-gray-400">System backup completed - 3 hours ago</span>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

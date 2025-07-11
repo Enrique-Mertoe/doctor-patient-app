@@ -1,15 +1,41 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/utils/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Shield } from 'lucide-react'
 
 export default function DashboardHeader({ user, profile }) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [hasAdminAccess, setHasAdminAccess] = useState(false)
+  const [checkingAdmin, setCheckingAdmin] = useState(true)
   const router = useRouter()
   const supabase = createClient()
+
+  useEffect(() => {
+    checkAdminAccess()
+  }, [user])
+
+  const checkAdminAccess = async () => {
+    if (!user) {
+      setHasAdminAccess(false)
+      setCheckingAdmin(false)
+      return
+    }
+
+    try {
+      const response = await fetch('/api/admin/check-access')
+      const data = await response.json()
+      setHasAdminAccess(data.hasAccess || false)
+    } catch (error) {
+      console.error('Error checking admin access:', error)
+      setHasAdminAccess(false)
+    } finally {
+      setCheckingAdmin(false)
+    }
+  }
 
   const handleLogout = async () => {
     setLoading(true)
@@ -56,7 +82,20 @@ export default function DashboardHeader({ user, profile }) {
             )}
           </div>
 
-          <div className="relative">
+          <div className="flex items-center space-x-4">
+            {/* Admin Button */}
+            {hasAdminAccess && !checkingAdmin && (
+              <Link
+                href="/admin"
+                className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-lg transition-colors"
+                title="Admin Dashboard"
+              >
+                <Shield className="w-4 h-4" />
+                <span className="hidden sm:inline">Admin</span>
+              </Link>
+            )}
+
+            <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center space-x-3 text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -108,6 +147,7 @@ export default function DashboardHeader({ user, profile }) {
                 </button>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>

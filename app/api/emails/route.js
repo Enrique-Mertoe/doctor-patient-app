@@ -68,6 +68,22 @@ export async function POST(request) {
         })
         break
 
+      case 'doctor_invitation':
+        if (!emailData?.doctor_name || !emailData?.admin_name || !emailData?.specialization || 
+            !emailData?.temporary_password || !emailData?.login_url) {
+          return NextResponse.json({ error: 'Missing doctor invitation data' }, { status: 400 })
+        }
+        result = await emailService.sendDoctorInvitation({
+          to,
+          doctorName: emailData.doctor_name,
+          adminName: emailData.admin_name,
+          specialization: emailData.specialization,
+          temporaryPassword: emailData.temporary_password,
+          loginUrl: emailData.login_url,
+          dashboardUrl: emailData.dashboard_url
+        })
+        break
+
       case 'custom':
         if (!emailData?.subject || !emailData?.html) {
           return NextResponse.json({ error: 'Missing custom email data' }, { status: 400 })
@@ -107,6 +123,7 @@ export async function GET(request) {
       'appointment-reminder', 
       'welcome',
       'password-reset',
+      'doctor_invitation',
       'custom'
     ]
   })
