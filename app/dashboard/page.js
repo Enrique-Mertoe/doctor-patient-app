@@ -1,6 +1,6 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import DashboardHeader from './DashboardHeader'
+import DashboardLayout from '../../components/DashboardLayout'
 import PatientDashboard from './PatientDashboard'
 import DoctorDashboard from './DoctorDashboard'
 
@@ -25,24 +25,18 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <DashboardHeader user={user} profile={profile} />
-      
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {profile.role === 'patient' ? (
-            <PatientDashboard user={user} profile={profile} />
-          ) : profile.role === 'doctor' ? (
-            <DoctorDashboard user={user} profile={profile} />
-          ) : (
-            <div className="text-center py-12">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                Unknown user role. Please contact support.
-              </h2>
-            </div>
-          )}
+    <DashboardLayout user={user} profile={profile}>
+      {profile.role === 'patient' ? (
+        <PatientDashboard user={user} profile={profile} />
+      ) : profile.role === 'doctor' ? (
+        <DoctorDashboard user={user} profile={profile} />
+      ) : (
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Unknown user role. Please contact support.
+          </h2>
         </div>
-      </div>
-    </div>
+      )}
+    </DashboardLayout>
   )
 }

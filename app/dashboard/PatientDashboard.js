@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import AppointmentBooking from './AppointmentBooking'
 import AppointmentHistory from './AppointmentHistory'
-import ChatWidget from '../../components/ChatWidget'
 
 export default function PatientDashboard({ user, profile }) {
   const [stats, setStats] = useState({
@@ -198,8 +197,6 @@ export default function PatientDashboard({ user, profile }) {
           </div>
         </div>
       </div>
-      
-      <ChatWidget user={user} profile={profile} />
     </div>
   )
 }

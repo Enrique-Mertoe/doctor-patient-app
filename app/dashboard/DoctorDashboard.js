@@ -1,7 +1,6 @@
 "use client"
 import { useState, useEffect } from 'react'
 import { format } from 'date-fns'
-import ChatWidget from '../../components/ChatWidget'
 
 export default function DoctorDashboard({ user, profile }) {
   const [stats, setStats] = useState({
@@ -224,8 +223,6 @@ export default function DoctorDashboard({ user, profile }) {
           </div>
         </div>
       </div>
-      
-      <ChatWidget user={user} profile={profile} />
     </div>
   )
 }
