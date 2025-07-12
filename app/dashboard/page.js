@@ -1,8 +1,8 @@
 import { createClient } from '@/utils/supabase/server'
 import { redirect } from 'next/navigation'
-import AppointmentBooking from './AppointmentBooking'
-import AppointmentHistory from './AppointmentHistory'
-import DashboardHeader from './DashboardHeader'
+import DashboardLayout from '../../components/DashboardLayout'
+import PatientDashboard from './PatientDashboard'
+import DoctorDashboard from './DoctorDashboard'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -13,31 +13,30 @@ export default async function DashboardPage() {
     redirect('/auth/login')
   }
 
+  // Check if user needs onboarding
+  const { data: profile } = await supabase
+    .from('user_profiles')
+    .select('*')
+    .eq('user_id', user.id)
+    .single()
+
+  if (!profile || !profile.onboarding_completed) {
+    redirect('/onboarding')
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <DashboardHeader user={user} />
-      
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="border-4 border-dashed border-gray-200 dark:border-gray-700 rounded-lg p-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">
-              Medical Appointment Dashboard
-            </h1>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div>
-                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Book New Appointment</h2>
-                <AppointmentBooking />
-              </div>
-              
-              <div>
-                <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Your Appointments</h2>
-                <AppointmentHistory />
-              </div>
-            </div>
-          </div>
+    <DashboardLayout user={user} profile={profile}>
+      {profile.role === 'patient' ? (
+        <PatientDashboard user={user} profile={profile} />
+      ) : profile.role === 'doctor' ? (
+        <DoctorDashboard user={user} profile={profile} />
+      ) : (
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            Unknown user role. Please contact support.
+          </h2>
         </div>
-      </div>
-    </div>
+      )}
+    </DashboardLayout>
   )
 }

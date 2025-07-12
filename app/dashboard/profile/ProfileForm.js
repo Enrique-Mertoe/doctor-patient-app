@@ -21,14 +21,19 @@ export default function ProfileForm({ user, patient }) {
     setMessage('')
 
     try {
-      const { error } = await supabase
-        .from('patients')
-        .upsert({
-          user_id: user.id,
-          ...formData
-        }, { onConflict: 'user_id' })
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      })
 
-      if (error) throw error
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Something went wrong')
+      }
 
       setMessage('Profile updated successfully!')
     } catch (error) {
@@ -55,6 +60,99 @@ export default function ProfileForm({ user, patient }) {
   }
 
   return (
-    <div className=\"space-y-6\">
-      <div className=\"flex justify-between items-center\">
-        <h2 className=\"text-lg font-medium text-gray-900 dark:text-white\">Personal Information</h2>\n        <Link\n          href=\"/dashboard\"\n          className=\"text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm\"\n        >\n          ← Back to Dashboard\n        </Link>\n      </div>\n\n      {message && (\n        <div className={`p-3 rounded-md text-sm ${\n          message.includes('successfully') || message.includes('sent')\n            ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'\n            : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'\n        }`}>\n          {message}\n        </div>\n      )}\n\n      <form onSubmit={handleSubmit} className=\"space-y-4\">\n        <div className=\"grid grid-cols-1 md:grid-cols-2 gap-4\">\n          <div>\n            <label className=\"block text-sm font-medium text-gray-700 dark:text-gray-300\">Full Name</label>\n            <input\n              type=\"text\"\n              value={formData.full_name}\n              onChange={(e) => setFormData({...formData, full_name: e.target.value})}\n              className=\"mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500\"\n              required\n            />\n          </div>\n          <div>\n            <label className=\"block text-sm font-medium text-gray-700 dark:text-gray-300\">Email</label>\n            <input\n              type=\"email\"\n              value={formData.email}\n              onChange={(e) => setFormData({...formData, email: e.target.value})}\n              className=\"mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500\"\n              required\n            />\n          </div>\n        </div>\n\n        <div className=\"grid grid-cols-1 md:grid-cols-2 gap-4\">\n          <div>\n            <label className=\"block text-sm font-medium text-gray-700 dark:text-gray-300\">Phone</label>\n            <input\n              type=\"tel\"\n              value={formData.phone}\n              onChange={(e) => setFormData({...formData, phone: e.target.value})}\n              className=\"mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500\"\n            />\n          </div>\n          <div>\n            <label className=\"block text-sm font-medium text-gray-700 dark:text-gray-300\">Date of Birth</label>\n            <input\n              type=\"date\"\n              value={formData.date_of_birth}\n              onChange={(e) => setFormData({...formData, date_of_birth: e.target.value})}\n              className=\"mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500\"\n            />\n          </div>\n        </div>\n\n        <div className=\"flex space-x-4\">\n          <button\n            type=\"submit\"\n            disabled={loading}\n            className=\"flex-1 bg-indigo-600 dark:bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50\"\n          >\n            {loading ? 'Updating...' : 'Update Profile'}\n          </button>\n          <button\n            type=\"button\"\n            onClick={handlePasswordReset}\n            disabled={loading}\n            className=\"flex-1 bg-gray-600 dark:bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50\"\n          >\n            Reset Password\n          </button>\n        </div>\n      </form>\n\n      <div className=\"border-t border-gray-200 dark:border-gray-700 pt-6\">\n        <h3 className=\"text-lg font-medium text-gray-900 dark:text-white mb-2\">Account Information</h3>\n        <div className=\"text-sm text-gray-600 dark:text-gray-400 space-y-1\">\n          <p><strong>User ID:</strong> {user.id}</p>\n          <p><strong>Account Created:</strong> {new Date(user.created_at).toLocaleDateString()}</p>\n          <p><strong>Email Confirmed:</strong> {user.email_confirmed_at ? 'Yes' : 'No'}</p>\n        </div>\n      </div>\n    </div>\n  )\n}
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white">Personal Information</h2>
+        <Link
+          href="/dashboard"
+          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-sm"
+        >
+          ← Back to Dashboard
+        </Link>
+      </div>
+
+      {message && (
+        <div className={`p-3 rounded-md text-sm ${
+          message.includes('successfully') || message.includes('sent')
+            ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+            : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
+        }`}>
+          {message}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Full Name</label>
+            <input
+              type="text"
+              value={formData.full_name}
+              onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone</label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({...formData, phone: e.target.value})}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Date of Birth</label>
+            <input
+              type="date"
+              value={formData.date_of_birth}
+              onChange={(e) => setFormData({...formData, date_of_birth: e.target.value})}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            />
+          </div>
+        </div>
+
+        <div className="flex space-x-4">
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex-1 bg-indigo-600 dark:bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+          >
+            {loading ? 'Updating...' : 'Update Profile'}
+          </button>
+          <button
+            type="button"
+            onClick={handlePasswordReset}
+            disabled={loading}
+            className="flex-1 bg-gray-600 dark:bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-700 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
+          >
+            Reset Password
+          </button>
+        </div>
+      </form>
+
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Account Information</h3>
+        <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+          <p><strong>User ID:</strong> {user.id}</p>
+          <p><strong>Account Created:</strong> {new Date(user.created_at).toLocaleDateString()}</p>
+          <p><strong>Email Confirmed:</strong> {user.email_confirmed_at ? 'Yes' : 'No'}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
