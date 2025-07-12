@@ -41,6 +41,15 @@ export async function middleware(request) {
     return NextResponse.redirect(url)
   }
 
+   if (
+    user &&
+    request.nextUrl.pathname.startsWith('/auth')
+  ) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
+  }
+
   return supabaseResponse
 }
 
